@@ -1,0 +1,7 @@
+ami=ami-0ddf424f81ddb0720
+availabiity_zone=us-west-2a
+region="us-west-2"
+vpc_cidr=0.0.0.0/16
+subnet_cidr=0.0.0.0/28
+security_group_cidr=0.0.0.0/0
+instance=t2.micro

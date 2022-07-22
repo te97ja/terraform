@@ -1,0 +1,52 @@
+#to create multiple reasons in multiple regions
+provider "aws" {
+  region     = "us-west-2"
+}
+
+#security group initializing
+resource "aws_security_group" "webserver_access" {
+        name = "webserver_access"
+        description = "allow ssh and http"
+
+        ingress {
+                from_port = 80
+                to_port = 80
+                protocol = "tcp"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+
+        ingress {
+                from_port = 22
+                to_port = 22
+                protocol = "tcp"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+
+        egress {
+                from_port = 0
+                to_port = 0
+                protocol = "-1"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+
+
+}
+#security group end here
+
+resource "aws_instance" "ourfirst" {
+  ami           = "ami-0cb4e786f15603b0d"
+#  availability_zone = "us-west-2a"
+  instance_type = "t2.micro"
+  security_groups = ["${aws_security_group.webserver_access.name}"]
+  /* the key zoomkey must be downloaded in your machine from where
+  you are executing this code. So first create the key, download it
+  and then use it */
+  key_name = "aws1"
+  user_data = "${file("install.sh")}"
+  tags = {
+    Name  = "terraform_installed_server"
+    Stage = "testing"
+    Location = "Oregon"
+  }
+
+}

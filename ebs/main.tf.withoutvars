@@ -1,0 +1,101 @@
+provider "aws" {
+  region = "us-west-2"
+}
+resource "aws_ebs_volume" "newebs" {
+  availability_zone = "us-west-2a"
+  size              = 10
+
+  tags = {
+    Name = "10gb volume"
+  }
+}
+
+resource "aws_vpc" "main" {
+cidr_block = "10.0.0.0/16"
+#instance_tenancy = default
+tags = {
+Name = "main"
+}
+}
+
+# Create the Security Group
+resource "aws_security_group" "my_vpc" {
+  vpc_id       = aws_vpc.main.id
+#  name         = "My VPC Security Group" 
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]  
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+  } 
+  
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+tags = {
+   Name = "My VPC Security Group"
+   Description = "My VPC Security Group"
+}
+}
+
+resource "aws_security_group" "webserver" {
+        name = "webserver"
+        vpc_id = aws_vpc.main.id
+        description = "allow ssh and http"
+
+        ingress {
+                from_port = 80
+                to_port = 80
+                protocol = "tcp"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+
+        ingress {
+                from_port = 22
+                to_port = 22
+                protocol = "tcp"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+
+        egress {
+                from_port = 0
+                to_port = 0
+                protocol = "-1"
+                cidr_blocks = ["0.0.0.0/0"]
+        }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.0.0/28"
+  availability_zone = "us-west-2a"
+
+
+  tags = {
+    Name = "Main"
+  }
+}
+
+
+resource "aws_instance" "ourfirst" {
+  ami           = "ami-0ddf424f81ddb0720"
+  instance_type = "t2.micro"
+  availability_zone = "us-west-2a"
+
+#  security_groups= [ aws_security_group.webserver.name ]
+  subnet_id = aws_subnet.main.id
+  vpc_security_group_ids = [ aws_security_group.my_vpc.id ]
+}
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdh"
+  volume_id   = aws_ebs_volume.newebs.id
+  instance_id = aws_instance.ourfirst.id
+}
+
+
+
